@@ -1,0 +1,2077 @@
+[
+    {
+        "id": "600a094864eef0cb",
+        "type": "tab",
+        "label": "RoboNurse",
+        "disabled": false,
+        "info": "RoboNurse Dashboard",
+        "env": []
+    },
+    {
+        "id": "e95cb08304e3b28b",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "SELECT",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "SELECT p.PATIENT_ID,p.PATIENT_NAME,p.PATIENT_ROOM,p.MEDICINE_NAME,p.MEDICINE_TIME,p.dose_number FROM PatientDetails p",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 200,
+        "wires": [
+            [
+                "53dcfc765dacf4b0",
+                "53dcfc765dacf4b0"
+            ]
+        ]
+    },
+    {
+        "id": "53dcfc765dacf4b0",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 360,
+        "y": 160,
+        "wires": [
+            [
+                "e169fa95e05f7d70",
+                "e169fa95e05f7d70"
+            ]
+        ]
+    },
+    {
+        "id": "e169fa95e05f7d70",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "fetchMedicationDetails",
+        "func": "\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 140,
+        "wires": [
+            [
+                "49ef312b8dccac32",
+                "49ef312b8dccac32"
+            ]
+        ]
+    },
+    {
+        "id": "49ef312b8dccac32",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "random pickup",
+        "func": "msg.payload = msg.payload[0]\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 800,
+        "y": 140,
+        "wires": [
+            [
+                "fefd4cb4ccf2bdb0",
+                "f3dadaa60125d780",
+                "fefd4cb4ccf2bdb0",
+                "f3dadaa60125d780"
+            ]
+        ]
+    },
+    {
+        "id": "fefd4cb4ccf2bdb0",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "f3dadaa60125d780",
+        "type": "mqtt out",
+        "z": "600a094864eef0cb",
+        "name": "publish delivery_request",
+        "topic": "delivery_request",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "92e200e9cc3ea28f",
+        "x": 1030,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "ab89ab445912d2b7",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "step1: Send medication details to robot",
+        "info": "",
+        "x": 450,
+        "y": 80,
+        "wires": []
+    },
+    {
+        "id": "7d19de44f5dd04c6",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "step2: once robot get the medication request, it starts moving and this flow will capture the robot movement",
+        "info": "",
+        "x": 670,
+        "y": 260,
+        "wires": []
+    },
+    {
+        "id": "4e4fa9bbe7812e1c",
+        "type": "mqtt in",
+        "z": "600a094864eef0cb",
+        "name": "subscribe robot_movement",
+        "topic": "robot_movement",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "92e200e9cc3ea28f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 340,
+        "wires": [
+            [
+                "5ed1669ede204511"
+            ]
+        ]
+    },
+    {
+        "id": "5ed1669ede204511",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "prepare_request",
+        "func": " var values = msg.payload;\n\n//INSERT INTO RobotDetails (Robot_NAME, Left_wheel_drive,Right_wheel_drive,camera_pan,camera_tilt,location) VALUES ('robo_nurses','67','-270','180','200','42.7788-122.5689');\nmsg.payload = [];\nmsg.payload = values.split(\",\")\n\nreturn msg",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 560,
+        "y": 360,
+        "wires": [
+            [
+                "ec16c36dc66e8c08",
+                "b206e9967374690e",
+                "22ac2c26fbe96509",
+                "57213ed67ed2e27e",
+                "fc8eba068a1d9408",
+                "f7c561ba27a9eeae",
+                "ec16c36dc66e8c08",
+                "b206e9967374690e",
+                "22ac2c26fbe96509",
+                "57213ed67ed2e27e",
+                "fc8eba068a1d9408",
+                "f7c561ba27a9eeae",
+                "a24f1982c78a610e"
+            ]
+        ]
+    },
+    {
+        "id": "ec16c36dc66e8c08",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 710,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "b206e9967374690e",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "parse_x",
+        "func": "var x= msg.payload[0];\nmsg.payload = x;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 360,
+        "wires": [
+            [
+                "d53da1140596cc56",
+                "d53da1140596cc56"
+            ]
+        ]
+    },
+    {
+        "id": "22ac2c26fbe96509",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "parse_y",
+        "func": "var y= msg.payload[1]\nmsg.payload = y;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 760,
+        "y": 420,
+        "wires": [
+            [
+                "44a54e64a22a0739",
+                "44a54e64a22a0739"
+            ]
+        ]
+    },
+    {
+        "id": "57213ed67ed2e27e",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "head_angle",
+        "func": "var head_angle= msg.payload[2]\nmsg.payload = head_angle;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 770,
+        "y": 480,
+        "wires": [
+            [
+                "5ed84d3af9df0589",
+                "5ed84d3af9df0589"
+            ]
+        ]
+    },
+    {
+        "id": "fc8eba068a1d9408",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "forward_velocity",
+        "func": "var forward_velocity= msg.payload[3]\nmsg.payload = forward_velocity;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 540,
+        "wires": [
+            [
+                "ef04664d888d6d0c",
+                "ef04664d888d6d0c"
+            ]
+        ]
+    },
+    {
+        "id": "f7c561ba27a9eeae",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "angular_velocity",
+        "func": "var angular_velocity= msg.payload[4]\nmsg.payload = angular_velocity;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 600,
+        "wires": [
+            [
+                "447eac9a71692120",
+                "447eac9a71692120"
+            ]
+        ]
+    },
+    {
+        "id": "d53da1140596cc56",
+        "type": "ui_gauge",
+        "z": "600a094864eef0cb",
+        "name": "x",
+        "group": "84fd2ba606524692",
+        "order": 0,
+        "width": "6",
+        "height": "6",
+        "gtype": "gage",
+        "title": "x",
+        "label": "units",
+        "format": "{{value}}",
+        "min": "-100",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 950,
+        "y": 360,
+        "wires": []
+    },
+    {
+        "id": "44a54e64a22a0739",
+        "type": "ui_gauge",
+        "z": "600a094864eef0cb",
+        "name": "y",
+        "group": "84fd2ba606524692",
+        "order": 0,
+        "width": "6",
+        "height": "6",
+        "gtype": "gage",
+        "title": "y",
+        "label": "units",
+        "format": "{{value}}",
+        "min": "-100",
+        "max": "100",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 950,
+        "y": 420,
+        "wires": []
+    },
+    {
+        "id": "5ed84d3af9df0589",
+        "type": "ui_gauge",
+        "z": "600a094864eef0cb",
+        "name": "head_angle",
+        "group": "84fd2ba606524692",
+        "order": 0,
+        "width": "6",
+        "height": "6",
+        "gtype": "gage",
+        "title": "head_angle",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": "360",
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 970,
+        "y": 480,
+        "wires": []
+    },
+    {
+        "id": "ef04664d888d6d0c",
+        "type": "ui_gauge",
+        "z": "600a094864eef0cb",
+        "name": "forward_velocity",
+        "group": "84fd2ba606524692",
+        "order": 0,
+        "width": "6",
+        "height": "6",
+        "gtype": "gage",
+        "title": "forward_velocity",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 980,
+        "y": 540,
+        "wires": []
+    },
+    {
+        "id": "447eac9a71692120",
+        "type": "ui_gauge",
+        "z": "600a094864eef0cb",
+        "name": "angular_velocity",
+        "group": "84fd2ba606524692",
+        "order": 0,
+        "width": "6",
+        "height": "6",
+        "gtype": "gage",
+        "title": "angular_velocity",
+        "label": "units",
+        "format": "{{value}}",
+        "min": 0,
+        "max": 10,
+        "colors": [
+            "#00b500",
+            "#e6e600",
+            "#ca3838"
+        ],
+        "seg1": "",
+        "seg2": "",
+        "className": "",
+        "x": 980,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "f673283041526c5a",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "display robot movement in dashboard",
+        "info": "",
+        "x": 1050,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "455cb1df420d4824",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "Central iot hub for robonurse",
+        "info": "",
+        "x": 720,
+        "y": 40,
+        "wires": []
+    },
+    {
+        "id": "c6b61703709cc581",
+        "type": "mqtt in",
+        "z": "600a094864eef0cb",
+        "name": "subscribe room_identification",
+        "topic": "room_identification",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "92e200e9cc3ea28f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 760,
+        "wires": [
+            [
+                "2eaeabe4b975723a"
+            ]
+        ]
+    },
+    {
+        "id": "2eaeabe4b975723a",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "prepare_request",
+        "func": "msg.headers = {}; \nmsg.headers['Prediction-Key'] = '2a8c1517da6c4fe4a32773da37737b55'; \nmsg.headers['Content-Type'] = 'application/octet-stream'; \nreturn msg; ",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 760,
+        "wires": [
+            [
+                "7bb413f30568905e",
+                "29ca2a5e53efc790"
+            ]
+        ]
+    },
+    {
+        "id": "7bb413f30568905e",
+        "type": "http request",
+        "z": "600a094864eef0cb",
+        "name": "Custom",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://westus2.api.cognitive.microsoft.com/customvision/v3.0/Prediction/0d044eac-8671-40c1-b197-0b0a0882e1ae/classify/iterations/Iteration4/image",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 600,
+        "y": 760,
+        "wires": [
+            [
+                "66276f7ce44c8b0e",
+                "fd81dfdc66ccf675"
+            ]
+        ]
+    },
+    {
+        "id": "29ca2a5e53efc790",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 450,
+        "y": 800,
+        "wires": []
+    },
+    {
+        "id": "66276f7ce44c8b0e",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "fd81dfdc66ccf675",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "parse response",
+        "func": "var temp = msg.payload.predictions;\nvar tag = \"\";\nvar min = 0.4;\nvar temp_value= 0;\n//getting the max value\nfor(let i =0; i<temp.length;i++){\n    if(temp[i].probability >temp_value && temp[i].probability > min){\n        \n        tag = temp[i].tagName;  \n    }\n}\nmsg.payload = tag;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 780,
+        "y": 760,
+        "wires": [
+            [
+                "f88aa9fdad8fc84e",
+                "848d3d79408664af"
+            ]
+        ]
+    },
+    {
+        "id": "f88aa9fdad8fc84e",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 930,
+        "y": 820,
+        "wires": []
+    },
+    {
+        "id": "848d3d79408664af",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "prepare sparkplug message",
+        "func": "tagValue= msg.payload;\nif(tagValue == \"\"){\n    tagValue = \"uncertain\";\n}\nexpected_value = \"R1\"\nis_match = expected_value.localeCompare(tagValue)\nmedicine_time = msg.message;\nmsg.payload = {\n   \n        \"actual\" :tagValue,\n        \"expected\":expected_value,\n        \"is_match\":is_match\n       \n   \n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1020,
+        "y": 760,
+        "wires": [
+            [
+                "a468ce6f0f82f474"
+            ]
+        ]
+    },
+    {
+        "id": "a468ce6f0f82f474",
+        "type": "mqtt out",
+        "z": "600a094864eef0cb",
+        "name": "Publish room_identification_response",
+        "topic": "room_identification_response",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "92e200e9cc3ea28f",
+        "x": 1330,
+        "y": 760,
+        "wires": []
+    },
+    {
+        "id": "6c55b16492fbdd69",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "step 3: Robot sends the room image and this flow validates it",
+        "info": "",
+        "x": 540,
+        "y": 660,
+        "wires": []
+    },
+    {
+        "id": "e3c326052da34507",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "subscribe the image from robot via hiveMQ broker",
+        "info": "",
+        "x": 190,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "eab477ce500dd9c9",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "microsoft cognitive service invocation for validating room",
+        "info": "",
+        "x": 750,
+        "y": 700,
+        "wires": []
+    },
+    {
+        "id": "61bc36c95e3c0638",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "validate the room image and publish the response to the broker",
+        "info": "",
+        "x": 1410,
+        "y": 720,
+        "wires": []
+    },
+    {
+        "id": "c21d5c3fbfbe1dd3",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "step 4: After room validation, robot captures the patient image and publish it. Then This flow will subscribe the image and validates it",
+        "info": "",
+        "x": 760,
+        "y": 900,
+        "wires": []
+    },
+    {
+        "id": "a9ebb26b89e919e5",
+        "type": "mqtt in",
+        "z": "600a094864eef0cb",
+        "name": "subscribe patient_identification",
+        "topic": "patient_identification",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "92e200e9cc3ea28f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 1000,
+        "wires": [
+            [
+                "87d087d2b8e3cfc1"
+            ]
+        ]
+    },
+    {
+        "id": "87d087d2b8e3cfc1",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "prepare_request",
+        "func": "msg.headers = {}; \nmsg.headers['Prediction-Key'] = '25b9c877f31245cab899c6cb41ab5545'; \nmsg.headers['Content-Type'] = 'application/octet-stream'; \nreturn msg; ",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 1020,
+        "wires": [
+            [
+                "08e6c9bc3d8eceef",
+                "39ae09fa230da00e"
+            ]
+        ]
+    },
+    {
+        "id": "08e6c9bc3d8eceef",
+        "type": "http request",
+        "z": "600a094864eef0cb",
+        "name": "validate_Patient_REST",
+        "method": "POST",
+        "ret": "obj",
+        "paytoqs": "ignore",
+        "url": "https://assign1sample-prediction.cognitiveservices.azure.com/customvision/v3.0/Prediction/0c2048dd-6754-4730-924f-229493d1b33a/classify/iterations/Iteration3/image",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "authType": "",
+        "senderr": false,
+        "x": 640,
+        "y": 1020,
+        "wires": [
+            [
+                "5528f1b8f90742f1",
+                "acd1a61783272ca8"
+            ]
+        ]
+    },
+    {
+        "id": "39ae09fa230da00e",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "payload",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 430,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "5528f1b8f90742f1",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "parse response",
+        "func": "var temp = msg.payload.predictions;\nvar tag = \"\";\n/*if(temp[0].probability  > temp[1].probability  && temp[0].probability  > temp[2].probability){\n    tag = temp[0].tagName;\n    } \nif(temp[1].probability  > temp[0].probability  && temp[1].probability  > temp[2].probability){\n\n    tag = temp[1].tagName;\n}\nif(temp[2].probability  > temp[0].probability  && temp[2].probability  > temp[0].probability){\n\n    tag = temp[2].tagName;\n}*/\nif(temp[0].probability  > temp[1].probability){\n    tag = temp[0].tagName;\n}\nmsg.payload = tag; \nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 820,
+        "y": 1020,
+        "wires": [
+            [
+                "d2dedbe70894466b",
+                "0120b32095630295"
+            ]
+        ]
+    },
+    {
+        "id": "acd1a61783272ca8",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 690,
+        "y": 1180,
+        "wires": []
+    },
+    {
+        "id": "d2dedbe70894466b",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 850,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "0120b32095630295",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "prepare sparkplug message",
+        "func": "tagValue= msg.payload;\n//medicine_time = msg.message;\nmsg.payload = {\n        \"is_patient\":tagValue\n       // \"message\":medicine_time\n    \n};\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1060,
+        "y": 1020,
+        "wires": [
+            [
+                "4715c8841ddbfc0f",
+                "8aaaa7df0a6a9357"
+            ]
+        ]
+    },
+    {
+        "id": "4715c8841ddbfc0f",
+        "type": "mqtt out",
+        "z": "600a094864eef0cb",
+        "name": "Publish response to patient_identification_response",
+        "topic": "patient_identification_response",
+        "qos": "",
+        "retain": "",
+        "respTopic": "",
+        "contentType": "",
+        "userProps": "",
+        "correl": "",
+        "expiry": "",
+        "broker": "92e200e9cc3ea28f",
+        "x": 1410,
+        "y": 1020,
+        "wires": []
+    },
+    {
+        "id": "8aaaa7df0a6a9357",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1110,
+        "y": 1080,
+        "wires": []
+    },
+    {
+        "id": "1622cf3d24c9a6ac",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "microsoft cognitive service invocation for validating patient",
+        "info": "",
+        "x": 750,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "85dd46498eba8525",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "validate the patient image and publish the response to the broker",
+        "info": "",
+        "x": 1450,
+        "y": 980,
+        "wires": []
+    },
+    {
+        "id": "09a4b8c82e09baf6",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "step 5: After patient validation, robot delivers the medicine to the patient and publish the delivery_status. Then This flow will subscribe the delivery status and update the DB and measure the accuracy rate",
+        "info": "",
+        "x": 990,
+        "y": 1260,
+        "wires": []
+    },
+    {
+        "id": "983f11c3f991fef3",
+        "type": "mqtt in",
+        "z": "600a094864eef0cb",
+        "name": "subscribe delivery_status",
+        "topic": "delivery_status",
+        "qos": "0",
+        "datatype": "auto",
+        "broker": "92e200e9cc3ea28f",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 170,
+        "y": 1320,
+        "wires": [
+            [
+                "f28847c11674bbeb"
+            ]
+        ]
+    },
+    {
+        "id": "f28847c11674bbeb",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "update_delivery_status",
+        "func": "var status = msg.payload;\n\nvar update_data = \"Update DeliveryStatus set delivery_status = '\"+ status +\"' where patient_id =1\";\nmsg.topic = update_data;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 470,
+        "y": 1320,
+        "wires": [
+            [
+                "2cbb2387dedded44",
+                "603d97920439b938"
+            ]
+        ]
+    },
+    {
+        "id": "2cbb2387dedded44",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 570,
+        "y": 1480,
+        "wires": []
+    },
+    {
+        "id": "603d97920439b938",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 620,
+        "y": 1400,
+        "wires": [
+            [
+                "11f73b5219682731",
+                "d34a90be41b55410"
+            ]
+        ]
+    },
+    {
+        "id": "de9962441df74fbe",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "INSERT INTO",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "INSERT INTO DeliveryStatus (PATIENT_ID, delivery_status) VALUES (1,'Failed'),(2,'Success'),(1,'Success'),(2,'Success'),(2,'Failed'),(1,'Success'),(2,'Failed'),(1,'Failed');",
+        "payload": "",
+        "payloadType": "date",
+        "x": 150,
+        "y": 1420,
+        "wires": [
+            [
+                "603d97920439b938"
+            ]
+        ]
+    },
+    {
+        "id": "68c89fd1832c418d",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "select",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": true,
+        "onceDelay": "100",
+        "topic": "select * from DeliveryStatus ",
+        "payload": "",
+        "payloadType": "date",
+        "x": 130,
+        "y": 1500,
+        "wires": [
+            [
+                "603d97920439b938"
+            ]
+        ]
+    },
+    {
+        "id": "786e20c0834a751c",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 1420,
+        "wires": []
+    },
+    {
+        "id": "52d56bdb8e595fa0",
+        "type": "ui_table",
+        "z": "600a094864eef0cb",
+        "group": "7a9125b33311c7a4",
+        "name": "Delivery_status_table",
+        "order": 0,
+        "width": "10",
+        "height": "6",
+        "columns": [],
+        "outputs": 0,
+        "cts": false,
+        "x": 1140,
+        "y": 1360,
+        "wires": []
+    },
+    {
+        "id": "11f73b5219682731",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "Delivery_status_accuracy_rate",
+        "func": "var success_count=5;\nvar failure_count =5;\nvar length = 0;\nfor(let i=0; i<msg.payload.length;i++){\n    //if(msg.payload[i].PATIENT_ID == 1){\n        //length++;\n        if(msg.payload[i].delivery_status == \"failed\"){\n            failure_count++;\n        }else{\n            success_count++;\n        }\n    //}\n}\nvar accuracy = (success_count*100)/(failure_count+success_count);\nmsg.payload = {};\nmsg.payload.accuracy_rate = accuracy;\nmsg.payload.success = success_count;\nmsg.payload.failure = failure_count;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 890,
+        "y": 1480,
+        "wires": [
+            [
+                "4a1b9286f3f08bd1",
+                "ec1b3941ee84a183"
+            ]
+        ]
+    },
+    {
+        "id": "4a1b9286f3f08bd1",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "Accuracy_rate",
+        "func": "var details= msg.payload\nmsg.payload=[{\n    \"series\": [\"Accuracy_rate\" ],\n    \"data\": [ details.success, details.failure, details.accuracy_rate ],\n    \"labels\": [ \"success\" ,\"Failure\", \"Accuracy\"]\n}];\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 1180,
+        "y": 1480,
+        "wires": [
+            [
+                "faffb0025840f375",
+                "b8511ba35416d8f4"
+            ]
+        ]
+    },
+    {
+        "id": "ec1b3941ee84a183",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 970,
+        "y": 1580,
+        "wires": []
+    },
+    {
+        "id": "faffb0025840f375",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1210,
+        "y": 1560,
+        "wires": []
+    },
+    {
+        "id": "d34a90be41b55410",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "fetch_delivery_status",
+        "func": "var status = msg.payload;\n\nvar update_data = \"select * from DeliveryStatus\";\nmsg.topic = update_data;\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 1380,
+        "wires": [
+            [
+                "52d56bdb8e595fa0",
+                "786e20c0834a751c"
+            ]
+        ]
+    },
+    {
+        "id": "53084cdab29f05a3",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "insert,Update and retrieves deliverystatus table",
+        "info": "",
+        "x": 780,
+        "y": 1340,
+        "wires": []
+    },
+    {
+        "id": "ab5ffecee3f2b110",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "creating,droping, insert and selecting(from) a PatientDetails table",
+        "info": "",
+        "x": 690,
+        "y": 1740,
+        "wires": []
+    },
+    {
+        "id": "37b71824730e0e87",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "Database settings",
+        "info": "",
+        "x": 710,
+        "y": 1680,
+        "wires": []
+    },
+    {
+        "id": "363503a4d0fb51ef",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "fetch data from PatientDetails table",
+        "info": "",
+        "x": 220,
+        "y": 120,
+        "wires": []
+    },
+    {
+        "id": "aa792433875e1ef8",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "INSERT INTO",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "INSERT INTO PatientDetails (PATIENT_ID,PATIENT_NAME,PATIENT_ROOM,MEDICINE_NAME,MEDICINE_TIME,dose_number) VALUES (10,'Denzel','R1','Aspirin','2022-03-04 22:57:01',1),(20,'Leonardo','R1','Advil','2022-03-04 19:57:01',2);",
+        "payload": "",
+        "payloadType": "date",
+        "x": 390,
+        "y": 1940,
+        "wires": [
+            [
+                "73a91f5328d1b0c9"
+            ]
+        ]
+    },
+    {
+        "id": "e4c8f2e0a57e2a6f",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "CREATE",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "CREATE TABLE PatientDetails( PATIENT_ID INT PRIMARY KEY NOT NULL, PATIENT_NAME VARCHAR, PATIENT_ROOM varchar,MEDICINE_NAME VARCHAR, MEDICINE_TIME timestamp, dose_number int not null)",
+        "payload": "",
+        "payloadType": "date",
+        "x": 380,
+        "y": 1860,
+        "wires": [
+            [
+                "73a91f5328d1b0c9"
+            ]
+        ]
+    },
+    {
+        "id": "ecbf8389a4be9181",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "DROP",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "DROP TABLE PatientDetails",
+        "payload": "",
+        "payloadType": "date",
+        "x": 370,
+        "y": 1800,
+        "wires": [
+            [
+                "73a91f5328d1b0c9"
+            ]
+        ]
+    },
+    {
+        "id": "c5bec5583641f2a3",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 1840,
+        "wires": []
+    },
+    {
+        "id": "406f0648c2102634",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "SELECT",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "SELECT * FROM PatientDetails",
+        "payload": "",
+        "payloadType": "date",
+        "x": 380,
+        "y": 2020,
+        "wires": [
+            [
+                "a6ae8189423cf2f9"
+            ]
+        ]
+    },
+    {
+        "id": "fb2fee6a939a7a4e",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 830,
+        "y": 2000,
+        "wires": []
+    },
+    {
+        "id": "178fd661d79b0aa5",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "compare_time",
+        "func": "if(msg.payload != undefined){\nvar patient_time = msg.payload[0].MEDICINE_TIME;\nvar spl_time = Date.parse(patient_time)\nvar test = new Date().getTime();\nvar message = \"\"\n//msg.payload = (spl_time - test);\nif(spl_time - test <= 3000000){\n    message = \"Time to get ready for medicine\";\n}else{\n    message = \"We have time\";\n}\n msg.payload = message;\n msg.message = message;\n}\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 860,
+        "y": 2080,
+        "wires": [
+            [
+                "d80b5db3d40bbd3c"
+            ]
+        ]
+    },
+    {
+        "id": "d80b5db3d40bbd3c",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "message",
+        "targetType": "msg",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 1080,
+        "y": 2080,
+        "wires": []
+    },
+    {
+        "id": "dfaa54215ba83e66",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "check the medication time",
+        "info": "",
+        "x": 890,
+        "y": 2040,
+        "wires": []
+    },
+    {
+        "id": "73a91f5328d1b0c9",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 640,
+        "y": 1900,
+        "wires": [
+            [
+                "c5bec5583641f2a3"
+            ]
+        ]
+    },
+    {
+        "id": "a6ae8189423cf2f9",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 640,
+        "y": 2020,
+        "wires": [
+            [
+                "178fd661d79b0aa5",
+                "fb2fee6a939a7a4e"
+            ]
+        ]
+    },
+    {
+        "id": "a24f1982c78a610e",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "save to DB",
+        "func": "msg.topic = \"insert into RobotDetails (x, y, head_angle, forward_velocity, angular_velocity) values(\"+msg.payload[0]+\",\"+msg.payload[1]+\",\"+ msg.payload[2]+\",\"+msg.payload[3]+\",\"+msg.payload[4]\n+\")\";\nreturn msg;\n\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 130,
+        "y": 520,
+        "wires": [
+            [
+                "e22ba54b04c61210",
+                "c231c02c3fcd16d2"
+            ]
+        ]
+    },
+    {
+        "id": "6f7b1f31f08c804b",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "creating,droping, insert and selecting(from) a Robot_movement table",
+        "info": "",
+        "x": 740,
+        "y": 2180,
+        "wires": []
+    },
+    {
+        "id": "476ede193174f878",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "DROP",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "DROP TABLE RobotDetails",
+        "payload": "",
+        "payloadType": "date",
+        "x": 450,
+        "y": 2260,
+        "wires": [
+            [
+                "bad2cfd1abf40ed4"
+            ]
+        ]
+    },
+    {
+        "id": "bad2cfd1abf40ed4",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 720,
+        "y": 2360,
+        "wires": [
+            [
+                "5bdfedf5ce2dc74e"
+            ]
+        ]
+    },
+    {
+        "id": "7353ed268c36f9a2",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "INSERT INTO",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "INSERT INTO PatientDetails (PATIENT_ID,PATIENT_NAME,PATIENT_ROOM,MEDICINE_NAME,MEDICINE_TIME,dose_number) VALUES (10,'Denzel','R1','Aspirin','2022-03-04 22:57:01',1),(20,'Leonardo','R1','Advil','2022-03-04 19:57:01',2);",
+        "payload": "",
+        "payloadType": "date",
+        "x": 470,
+        "y": 2400,
+        "wires": [
+            [
+                "bad2cfd1abf40ed4"
+            ]
+        ]
+    },
+    {
+        "id": "6f1ff3c1619f5f53",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "CREATE",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "CREATE TABLE RobotDetails( ID INTEGER PRIMARY Key Autoincrement, x varchar,y varchar, head_angle,forward_velocity varchar ,angular_velocity varchar)",
+        "payload": "",
+        "payloadType": "date",
+        "x": 460,
+        "y": 2320,
+        "wires": [
+            [
+                "bad2cfd1abf40ed4"
+            ]
+        ]
+    },
+    {
+        "id": "5bdfedf5ce2dc74e",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 970,
+        "y": 2300,
+        "wires": []
+    },
+    {
+        "id": "b0789d3b2e691d75",
+        "type": "ui_table",
+        "z": "600a094864eef0cb",
+        "group": "84fd2ba606524692",
+        "name": "Robot_modement_details",
+        "order": 0,
+        "width": "12",
+        "height": "6",
+        "columns": [],
+        "outputs": 0,
+        "cts": false,
+        "x": 530,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "6fdcce0d6b257a92",
+        "type": "function",
+        "z": "600a094864eef0cb",
+        "name": "retrieve_data",
+        "func": "var status = msg.payload;\nvar update_data = \"select * from RobotDetails order by id desc limit 10\";\nmsg.topic = update_data;\nreturn msg;\n",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 510,
+        "y": 440,
+        "wires": [
+            [
+                "b0789d3b2e691d75",
+                "8a01cbcc55232afe",
+                "862c6984f7c2e00a"
+            ]
+        ]
+    },
+    {
+        "id": "e22ba54b04c61210",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 150,
+        "y": 600,
+        "wires": []
+    },
+    {
+        "id": "f1025b27de5b494b",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "select * from RobotDetails",
+        "payload": "",
+        "payloadType": "date",
+        "x": 460,
+        "y": 2460,
+        "wires": [
+            [
+                "bad2cfd1abf40ed4"
+            ]
+        ]
+    },
+    {
+        "id": "c231c02c3fcd16d2",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 320,
+        "y": 500,
+        "wires": [
+            [
+                "6fdcce0d6b257a92"
+            ]
+        ]
+    },
+    {
+        "id": "862c6984f7c2e00a",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 590,
+        "y": 560,
+        "wires": []
+    },
+    {
+        "id": "8a01cbcc55232afe",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "cd043ae0e0d9af84",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 560,
+        "y": 520,
+        "wires": [
+            [
+                "b0789d3b2e691d75"
+            ]
+        ]
+    },
+    {
+        "id": "62b633043e343313",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "INSERT INTO",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "INSERT INTO DeliveryStatus (PATIENT_ID, delivery_status) VALUES (1,'Failed'),(2,'Success'),(1,'Success'),(2,'Success'),(2,'Failed'),(1,'Success'),(2,'Failed'),(1,'Failed');",
+        "payload": "",
+        "payloadType": "date",
+        "x": 390,
+        "y": 2600,
+        "wires": [
+            [
+                "19a5835f66d95404"
+            ]
+        ]
+    },
+    {
+        "id": "19a5835f66d95404",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "058cd1605e5d9f86",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 660,
+        "y": 2600,
+        "wires": [
+            [
+                "7bd0846a70ad6260"
+            ]
+        ]
+    },
+    {
+        "id": "07f33390a45b818c",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "Update_delivery_status",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "Update DeliveryStatus set delivery_status = \"dfff\" where patient_id =1",
+        "payload": "",
+        "payloadType": "date",
+        "x": 420,
+        "y": 2660,
+        "wires": [
+            [
+                "19a5835f66d95404"
+            ]
+        ]
+    },
+    {
+        "id": "d0b5dbaf9633c39e",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "select",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "select * from DeliveryStatus ",
+        "payload": "",
+        "payloadType": "date",
+        "x": 410,
+        "y": 2740,
+        "wires": [
+            [
+                "19a5835f66d95404"
+            ]
+        ]
+    },
+    {
+        "id": "7bd0846a70ad6260",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 910,
+        "y": 2580,
+        "wires": []
+    },
+    {
+        "id": "447d570dcf9580cc",
+        "type": "comment",
+        "z": "600a094864eef0cb",
+        "name": "creating,droping, insert and selecting(from) a DeliveryStatus table",
+        "info": "",
+        "x": 670,
+        "y": 2520,
+        "wires": []
+    },
+    {
+        "id": "d3ecbeefe27ca4d9",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "CREATE",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "CREATE TABLE DeliveryStatus( ID INTEGER PRIMARY KEY Autoincrement, delivery_status varchar, patient_id int ,   CONSTRAINT fk_patients     FOREIGN KEY (patient_id)     REFERENCES PatientDetails(patient_id) );",
+        "payload": "",
+        "payloadType": "date",
+        "x": 440,
+        "y": 2880,
+        "wires": [
+            [
+                "af8bb9771dc220b2"
+            ]
+        ]
+    },
+    {
+        "id": "af8bb9771dc220b2",
+        "type": "sqlite",
+        "z": "600a094864eef0cb",
+        "mydb": "058cd1605e5d9f86",
+        "sqlquery": "msg.topic",
+        "sql": "INSERT INTO sensorData(temperature,humidity,timeCapture) VALUES ($temperature, $humidity, $currentDate);",
+        "name": "RoboNurseDB",
+        "x": 640,
+        "y": 2820,
+        "wires": [
+            [
+                "9769ea554952c41d"
+            ]
+        ]
+    },
+    {
+        "id": "2e5fd1b15705502a",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "DROP",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "DROP TABLE DeliveryStatus",
+        "payload": "",
+        "payloadType": "date",
+        "x": 410,
+        "y": 2820,
+        "wires": [
+            [
+                "af8bb9771dc220b2"
+            ]
+        ]
+    },
+    {
+        "id": "0e2772981d346690",
+        "type": "inject",
+        "z": "600a094864eef0cb",
+        "name": "DELETE",
+        "props": [
+            {
+                "p": "topic",
+                "vt": "str"
+            },
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "delete from  DeliveryStatus",
+        "payload": "",
+        "payloadType": "date",
+        "x": 440,
+        "y": 2940,
+        "wires": [
+            [
+                "af8bb9771dc220b2"
+            ]
+        ]
+    },
+    {
+        "id": "9769ea554952c41d",
+        "type": "debug",
+        "z": "600a094864eef0cb",
+        "name": "",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "false",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 890,
+        "y": 2820,
+        "wires": []
+    },
+    {
+        "id": "b8511ba35416d8f4",
+        "type": "ui_chart",
+        "z": "600a094864eef0cb",
+        "name": "Accuracy_rate",
+        "group": "7a9125b33311c7a4",
+        "order": 6,
+        "width": "10",
+        "height": "6",
+        "label": "Accuracy_rate_for_patient",
+        "chartType": "bar",
+        "legend": "true",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "100",
+        "removeOlder": 1,
+        "removeOlderPoints": "",
+        "removeOlderUnit": "3600",
+        "cutout": 0,
+        "useOneColor": false,
+        "useUTC": false,
+        "colors": [
+            "#1f77b4",
+            "#aec7e8",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 1300,
+        "y": 1420,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "cd043ae0e0d9af84",
+        "type": "sqlitedb",
+        "db": "myDB",
+        "mode": "RWC"
+    },
+    {
+        "id": "92e200e9cc3ea28f",
+        "type": "mqtt-broker",
+        "name": "HiveMQCloud",
+        "broker": "0f461b0fa77c45caaf995885b48b0daf.s2.eu.hivemq.cloud",
+        "port": "8883",
+        "tls": "",
+        "clientid": "RoboNurseMessagePublisher",
+        "autoConnect": true,
+        "usetls": true,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "sessionExpiry": ""
+    },
+    {
+        "id": "84fd2ba606524692",
+        "type": "ui_group",
+        "name": "Robot_activity_Details",
+        "tab": "367f8cedf6d1b478",
+        "order": 1,
+        "disp": true,
+        "width": "18",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "7a9125b33311c7a4",
+        "type": "ui_group",
+        "name": "Delivery_status",
+        "tab": "367f8cedf6d1b478",
+        "order": 2,
+        "disp": true,
+        "width": "10",
+        "collapse": false,
+        "className": ""
+    },
+    {
+        "id": "058cd1605e5d9f86",
+        "type": "sqlitedb",
+        "z": "7769b6fb57d42639",
+        "db": "myDB",
+        "mode": "RWC"
+    },
+    {
+        "id": "367f8cedf6d1b478",
+        "type": "ui_tab",
+        "name": "RoboNurse",
+        "icon": "dashboard",
+        "disabled": false,
+        "hidden": false
+    }
+]
