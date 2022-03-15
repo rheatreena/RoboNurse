@@ -1,5 +1,4 @@
-Readme
-
+Central IoT hub is responsible for capturing the robot movement, update the medication delivery status in the database and it will instruct robot.
 From the central IoT hub, send the medication_delivery request  which includes the room number to which the robot needs to go to deliver the medicine.To initiate the flow,  one needs to press the inject button. This instruction will be published using MQTT protocol and can be available in hiveMQ broker.
 
 Robot will consume the request and then start moving and publish all the movement details to the robot_movement topic.
